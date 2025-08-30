@@ -1,0 +1,130 @@
+{
+  "properties": {
+    "activities": [
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "913d54a2-af21-8f41-40e6-7b06db84d59f",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Bronze",
+        "dependsOn": []
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "ed3d9e71-d69d-bcc0-4599-992ca2a8c73e",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "bronze_lh": {
+              "value": {
+                "value": "@json(activity('Bronze').output.result.exitValue).bronze_lh",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "silver_lh": {
+              "value": {
+                "value": "@json(activity('Bronze').output.result.exitValue).silver_lh",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "gold_lh": {
+              "value": {
+                "value": "@json(activity('Bronze').output.result.exitValue).gold_lh",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          }
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Silver",
+        "dependsOn": [
+          {
+            "activity": "Bronze",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "fdb89bfd-d79a-8b7d-4e9f-9cdcd096d23e",
+          "workspaceId": "00000000-0000-0000-0000-000000000000",
+          "parameters": {
+            "silver_lh": {
+              "value": {
+                "value": "@json(activity('Silver').output.result.exitValue).silver_lh",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "gold_lh": {
+              "value": {
+                "value": "@json(activity('Silver').output.result.exitValue).gold_lh",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          }
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 2,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "Gold",
+        "dependsOn": [
+          {
+            "activity": "Silver",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      },
+      {
+        "type": "TridentNotebook",
+        "typeProperties": {
+          "notebookId": "8d5e77ae-9628-890f-446d-260ce36ab91b",
+          "workspaceId": "00000000-0000-0000-0000-000000000000"
+        },
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "name": "AWS RDS sync",
+        "dependsOn": [
+          {
+            "activity": "Gold",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
